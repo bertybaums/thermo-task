@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Thermometer Estimation Task</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            padding: 20px;
+        }
+
+        /* ── Welcome screen ─────────────────────────── */
+
+        #welcome {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        #welcome h1 {
+            font-size: 24px;
+            margin-bottom: 16px;
+            color: #2a3f5f;
+        }
+
+        #welcome p {
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .start-btn {
+            display: inline-block;
+            padding: 14px 40px;
+            font-size: 17px;
+            font-weight: 600;
+            color: white;
+            background: #636EFA;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+
+        .start-btn:hover { opacity: 0.9; }
+
+        /* ── Task screen ────────────────────────────── */
+
+        #task { display: none; }
+
+        .progress {
+            text-align: center;
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 20px;
+        }
+
+        .prompt-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+
+        .prompt-text {
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .prompt-text strong { color: #2a3f5f; }
+
+        /* ── Temperature scale ──────────────────────── */
+
+        .scale-container {
+            position: relative;
+            margin: 40px 16px 20px;
+            height: 80px;
+        }
+
+        .scale-line {
+            position: absolute;
+            top: 30px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #ddd;
+            border-radius: 2px;
+        }
+
+        .scale-marker {
+            position: absolute;
+            top: 10px;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        .marker-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            margin: 0 auto 4px;
+            border: 3px solid white;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+
+        .marker-label {
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .marker-x .marker-dot { background: #636EFA; }
+        .marker-y .marker-dot { background: #EF553B; }
+        .marker-z .marker-dot { background: #00CC96; }
+        .marker-x .marker-label { color: #636EFA; }
+        .marker-y .marker-label { color: #EF553B; }
+        .marker-z .marker-label { color: #00CC96; }
+
+        /* Tick marks */
+        .scale-ticks {
+            position: absolute;
+            top: 26px;
+            left: 0;
+            right: 0;
+            height: 10px;
+        }
+
+        .tick {
+            position: absolute;
+            width: 1px;
+            height: 10px;
+            background: #ccc;
+            transform: translateX(-0.5px);
+        }
+
+        .tick-label {
+            position: absolute;
+            top: 14px;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #aaa;
+        }
+
+        /* ── Estimate slider ────────────────────────── */
+
+        .slider-section {
+            margin: 20px 0 8px;
+        }
+
+        .slider-label {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .estimate-display {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: #2a3f5f;
+            margin-bottom: 12px;
+            min-height: 42px;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 44px;
+            background: transparent;
+            cursor: pointer;
+            touch-action: none;
+        }
+
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 8px;
+            background: linear-gradient(to right, #636EFA, #EF553B);
+            border-radius: 4px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #2a3f5f;
+            border: 3px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            margin-top: -10px;
+        }
+
+        input[type="range"]::-moz-range-track {
+            height: 8px;
+            background: linear-gradient(to right, #636EFA, #EF553B);
+            border-radius: 4px;
+            border: none;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #2a3f5f;
+            border: 3px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        .slider-range-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #aaa;
+            margin-top: -4px;
+        }
+
+        /* ── Submit ─────────────────────────────────── */
+
+        .submit-btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            font-size: 17px;
+            font-weight: 600;
+            color: white;
+            background: #636EFA;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: background 0.15s;
+        }
+
+        .submit-btn:disabled {
+            background: #b0b8d9;
+            cursor: not-allowed;
+        }
+
+        .submit-btn:not(:disabled):hover { background: #4f5bd5; }
+
+        /* ── Feedback flash ─────────────────────────── */
+
+        .feedback {
+            text-align: center;
+            font-size: 14px;
+            color: #00CC96;
+            font-weight: 600;
+            height: 24px;
+            margin-top: 8px;
+        }
+
+        /* ── Done screen ────────────────────────────── */
+
+        #done {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        #done h2 {
+            font-size: 22px;
+            color: #2a3f5f;
+            margin-bottom: 12px;
+        }
+
+        #done p {
+            font-size: 15px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Welcome -->
+    <div id="welcome">
+        <h1>Thermometer Estimation</h1>
+        <p>Three thermometers are placed in the same pot of water, but they
+        don't all agree. Your job: <strong>estimate the actual water
+        temperature</strong> based on the three readings.</p>
+        <p>You'll see a series of scenarios. For each one, look at the three
+        readings on the scale, then drag the slider to your best estimate.
+        There are no trick questions and no time limit.</p>
+        <p>You can complete as many or as few as you like. Each scenario
+        takes about 10 seconds.</p>
+        <button class="start-btn" onclick="startTask()">Start</button>
+    </div>
+
+    <!-- Task -->
+    <div id="task">
+        <div class="progress" id="progress"></div>
+
+        <div class="prompt-card">
+            <div class="prompt-text" id="prompt-text"></div>
+
+            <div class="scale-container" id="scale-container">
+                <div class="scale-line"></div>
+                <div class="scale-ticks" id="scale-ticks"></div>
+            </div>
+
+            <div class="slider-section">
+                <div class="slider-label">Your estimate:</div>
+                <div class="estimate-display" id="estimate-display">--</div>
+                <input type="range" id="slider" min="0" max="100" step="0.5"
+                       oninput="updateEstimate(this.value)">
+                <div class="slider-range-labels">
+                    <span id="slider-min"></span>
+                    <span id="slider-max"></span>
+                </div>
+            </div>
+        </div>
+
+        <button class="submit-btn" id="submit-btn" onclick="submitAnswer()" disabled>
+            Submit estimate
+        </button>
+        <div class="feedback" id="feedback"></div>
+    </div>
+
+    <!-- Done -->
+    <div id="done">
+        <h2>Thanks!</h2>
+        <p>You completed <span id="done-count"></span> estimates.</p>
+        <button class="start-btn" onclick="continueTask()">Do more</button>
+    </div>
+
+</div>
+
+<!-- Firebase SDK (compat mode for simplicity) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script src="trials.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
